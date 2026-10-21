@@ -397,3 +397,16 @@ describe("그룹을 만든 사람의 권한 (2026-10-19 확정)", () => {
     expect(forbidden.message).toBe("그룹 관리자만 수정할 수 있어요.");
   });
 });
+
+describe("비밀번호 변경 A8 (docs/features/password-change.md)", () => {
+  it("현재 비밀번호 확인 후 변경, 새 비밀번호로만 로그인", async () => {
+    const { changePassword, login } = await import("./auth");
+    const wrong = await expectApiError(changePassword({ currentPassword: "wrong-pass", newPassword: "newpass1234", newPasswordConfirm: "newpass1234" }), "VALIDATION");
+    expect(wrong.fieldErrors).toEqual({ currentPassword: "현재 비밀번호가 일치하지 않습니다." });
+    const same = await expectApiError(changePassword({ currentPassword: "password123", newPassword: "password123", newPasswordConfirm: "password123" }), "VALIDATION");
+    expect(same.fieldErrors).toEqual({ newPassword: "현재 비밀번호와 다른 비밀번호를 입력해 주세요." });
+    await changePassword({ currentPassword: "password123", newPassword: "newpass1234", newPasswordConfirm: "newpass1234" });
+    await expectApiError(login("seoyeon@example.com", "password123", false), "INVALID_CREDENTIALS");
+    expect((await login("seoyeon@example.com", "newpass1234", false)).name).toBe("김서연");
+  });
+});

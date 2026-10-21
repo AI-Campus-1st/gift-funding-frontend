@@ -1,11 +1,11 @@
-"""A1 ~ A7 인증 · 사용자 관리 API (docs/backend/API.SPEC.md 3장)"""
+"""A1 ~ A8 인증 · 사용자 관리 API (docs/backend/API.SPEC.md 3장)"""
 
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import User
-from app.schemas.auth import AuthTokenDto, IdDto, LoginRequest, PreferenceDto, PreferenceRequest, ProfileRequest, SignupRequest, UserDto
+from app.schemas.auth import AuthTokenDto, IdDto, LoginRequest, PasswordChangeRequest, PreferenceDto, PreferenceRequest, ProfileRequest, SignupRequest, UserDto
 from app.security import get_current_user
 from app.services import auth as service
 
@@ -46,3 +46,9 @@ def get_preferences(user: User = Depends(get_current_user), db: Session = Depend
 @router.put("/me/preferences", response_model=PreferenceDto, summary="A7 선물 취향 저장")
 def put_preferences(req: PreferenceRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> PreferenceDto:
     return service.update_preference(db, user, req)
+
+
+@router.patch("/me/password", status_code=status.HTTP_204_NO_CONTENT, summary="A8 비밀번호 변경")
+def change_password(req: PasswordChangeRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
+    service.change_password(db, user, req)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

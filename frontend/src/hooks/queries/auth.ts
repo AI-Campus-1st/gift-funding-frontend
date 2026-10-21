@@ -3,7 +3,7 @@
  * 로그인 · 로그아웃 상태는 lib/auth.tsx(AuthProvider)가 관리한다.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPreference, signup, updatePreference, updateProfile } from "@/lib/api/auth";
+import { changePassword, getPreference, signup, updatePreference, updateProfile } from "@/lib/api/auth";
 import type { GiftPreference, ProfileInput, SignupInput } from "@/types";
 import { queryKeys } from "../queryKeys";
 
@@ -31,4 +31,9 @@ export function useUpdateProfileMutation() {
 /** 회원가입 — 캐시에 남길 데이터가 없어 무효화는 하지 않는다 */
 export function useSignupMutation() {
   return useMutation({ mutationFn: (input: SignupInput) => signup(input) });
+}
+
+/** A8 비밀번호 변경 — 캐시에 바뀌는 데이터가 없다 */
+export function useChangePasswordMutation() {
+  return useMutation({ mutationFn: (input: { currentPassword: string; newPassword: string; newPasswordConfirm: string }) => changePassword(input) });
 }

@@ -15,7 +15,8 @@
 > 변경 이력
 > - 2026-10-19 미정 정책 확정 반영 (Q2 · Q3 · Q10 · Q11-1 ① · Q16 · Q17 · Q18 · Q19 · Q20)
 > - 2026-10-19 글자 수 확정(Q1 · Q4) 반영
-> - 2026-10-20 AI 추천 GPT(`gpt-4o-mini`) 연결 확정 (Q21~Q24) — Gemini는 접근 거부(403)로 변경
+> - 2026-10-21 A8 비밀번호 변경 추가 (Q20-1 확정)
+- 2026-10-20 AI 추천 GPT(`gpt-4o-mini`) 연결 확정 (Q21~Q24) — Gemini는 접근 거부(403)로 변경
 - 2026-10-19 정산 계좌번호 암호화 방식 확정 (Fernet + `ACCOUNT_ENCRYPTION_KEY`)
 - 2026-10-19 선물 가격 최대 5,000만 원 · 후원 중복 방지 키 형식 검사 확정
 - 2026-10-19 그룹을 만든 사람의 권한 확정: G9 그룹 이름 · 설명 수정 추가(관리자만, Q9) · F3 펀딩은 내가 만든 그룹에만
@@ -101,6 +102,7 @@
 | A5 | PATCH | `/me` | 내 프로필 수정 | 로그인 | C | F-02 |
 | A6 | GET | `/me/preferences` | 선물 취향 조회 | 로그인 | C | F-02 |
 | A7 | PUT | `/me/preferences` | 선물 취향 저장 | 로그인 | C | F-02 |
+| A8 | PATCH | `/me/password` | 비밀번호 변경 | 로그인 | B | F-01 |
 | G1 | GET | `/groups` | 내 그룹 목록 (만든 · 참여한) | 로그인 | C | F-05 |
 | G2 | POST | `/groups` | 그룹 생성 | 로그인 | C | F-05 |
 | G3 | GET | `/groups/{group_id}` | 그룹 상세 · 참여자 | 그룹 참여자 | C | F-05 |
@@ -282,6 +284,19 @@ AiRecommendationDto { id, name, reason, category, price_min, price_max }
 1. 이메일(소문자) · 비밀번호 해시를 비교한다.
 2. 실패 문구는 이메일 가입 여부를 드러내지 않도록 하나로 통일: `401 INVALID_CREDENTIALS` "이메일 또는 비밀번호를 확인해 주세요."
 3. 📌 토큰 유효기간은 **30일**이다 (`expires_in` = 2592000초). `remember_me`는 서버 동작에 영향이 없고, 프론트가 브라우저를 닫아도 토큰을 남길지만 정한다 (Q16, 2026-10-19 확정).
+
+#### A8. 비밀번호 변경 — `PATCH /me/password` 📌 2026-10-21 추가 (Q20-1 · `docs/features/password-change.md`)
+
+**Request** `{ "current_password", "new_password", "new_password_confirm" }` → **Response** `204`
+
+| 순서 | 조건 | 오류 (`400 VALIDATION` + `field_errors`) |
+|---|---|---|
+| 1 | 빈 칸 · 새 비밀번호 8자 미만 · 확인 불일치 | `current_password` "현재 비밀번호를 입력해 주세요." · `new_password` "비밀번호는 8자 이상 입력해 주세요." · `new_password_confirm` "비밀번호가 일치하지 않습니다." |
+| 2 | 현재 비밀번호가 틀림 (Argon2 검증) | `current_password` "현재 비밀번호가 일치하지 않습니다." — ⚠️ `401`이 아니다 (프론트는 `401`을 로그인 만료로 처리) |
+| 3 | 새 비밀번호 = 현재 비밀번호 | `new_password` "현재 비밀번호와 다른 비밀번호를 입력해 주세요." |
+| 4 | `users.password_hash`를 새 Argon2 해시로 저장 | — |
+
+- 로그인 유지: 이미 발급된 토큰은 그대로 쓸 수 있다 (다른 기기 포함, PENDING L4). DB 변경 없음.
 
 ---
 

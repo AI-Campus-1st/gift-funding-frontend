@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.errors import ApiError
 from app.models import User, UserPreference
-from app.schemas.auth import AuthTokenDto, LoginRequest, PreferenceDto, PreferenceRequest, ProfileRequest, SignupRequest, UserDto
+from app.schemas.auth import AuthTokenDto, LoginRequest, PasswordChangeRequest, PreferenceDto, PreferenceRequest, ProfileRequest, SignupRequest, UserDto
 from app.security import create_access_token, hash_password, verify_password
 from app.services import validation as v
 
@@ -72,6 +72,29 @@ def update_profile(db: Session, user: User, req: ProfileRequest) -> UserDto:
     db.commit()
     db.refresh(user)
     return to_user_dto(user)
+
+
+def change_password(db: Session, user: User, req: PasswordChangeRequest) -> None:
+    """
+    A8 비밀번호 변경 (2026-10-21 확정 · docs/features/password-change.md)
+    입력 검사 → 현재 비밀번호 확인 → 현재와 같은 비밀번호 거절 → 새 Argon2 해시 저장. 로그인(토큰)은 유지된다.
+    틀린 현재 비밀번호도 401 이 아니라 400 으로 돌려준다 (프론트는 401 을 "로그인 만료"로 보고 로그아웃시킨다).
+    """
+    _raise_if_errors(
+        {
+            "current_password": "현재 비밀번호를 입력해 주세요." if not req.current_password else None,
+            "new_password": v.validate_password(req.new_password),
+            "new_password_confirm": v.validate_password_confirm(req.new_password, req.new_password_confirm),
+        }
+    )
+    if not verify_password(user.password_hash, req.current_password):
+        message = "현재 비밀번호가 일치하지 않습니다."
+        raise ApiError("VALIDATION", message, field_errors={"current_password": message})
+    if verify_password(user.password_hash, req.new_password):
+        message = "현재 비밀번호와 다른 비밀번호를 입력해 주세요."
+        raise ApiError("VALIDATION", message, field_errors={"new_password": message})
+    user.password_hash = hash_password(req.new_password)
+    db.commit()
 
 
 def _get_or_create_preference(db: Session, user: User) -> UserPreference:

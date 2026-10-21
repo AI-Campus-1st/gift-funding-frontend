@@ -35,13 +35,13 @@
 | 백엔드 | FastAPI · SQLAlchemy 2 · Pydantic 2 · PyJWT · Argon2 · Fernet(계좌 암호화) · Pytest |
 | 데이터베이스 | PostgreSQL 16 |
 | AI | OpenAI GPT API (`gpt-4o-mini`, Structured Outputs) — 키가 없으면 모의 추천 |
-| 실행 환경 | Docker Compose (DB + 백엔드 컨테이너 2개) |
+| 실행 환경 | Docker Compose (DB · 백엔드 · 프론트 컨테이너 3개) |
 
 ## 폴더 구조
 
 ```
 gift-funding/
-├── frontend/          Next.js 화면 (실제 API · Mock 모드 전환 가능)
+├── frontend/          Next.js 화면 (Dockerfile 포함, 실제 API · Mock 모드 전환 가능)
 ├── backend/           FastAPI 서버 (API 47개, /api/v1)
 ├── db/                01_init.sql(테이블 14개) · 02_data.sql(테스트 데이터)
 ├── docs/              기획 · 명세 · 설계 문서
@@ -69,27 +69,36 @@ cp .env.example .env
 | `ACCOUNT_ENCRYPTION_KEY` | 정산 계좌번호 암호화 열쇠 (한 번 정하면 바꾸지 않기) | `python3 -c "import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"` |
 | `OPENAI_API_KEY` | AI 추천 (선택 — 비우면 모의 추천) | platform.openai.com |
 
-### 2. DB + 백엔드 (Docker)
+### 2. 전체 실행 (Docker — DB · 백엔드 · 프론트 3개)
 
 ```bash
 docker compose up -d --build
+docker compose ps        # 3개 모두 healthy 인지 확인
 ```
 
-- 백엔드: http://localhost:8000 · API 문서: http://localhost:8000/docs
+| 서비스 | 주소 |
+|---|---|
+| 프론트(화면) | http://localhost:3000 |
+| 백엔드 API · 문서 | http://localhost:8000 · http://localhost:8000/docs |
+| DB (PostgreSQL) | localhost:5432 |
+
 - 처음 켤 때 `db/01_init.sql` → `db/02_data.sql`이 자동으로 실행돼요.
+- 끄기 (데이터 유지): `docker compose down`
+- 코드 수정 반영: `docker compose down && docker compose up -d --build`
 - DB를 처음부터 다시 만들기 (⚠️ 데이터 삭제): `docker compose down -v && docker compose up -d --build`
 
-### 3. 프론트엔드
+### 3. (선택) 화면을 고치면서 개발할 때
+
+도커 프론트는 배포용 빌드라 코드를 고치면 다시 빌드해야 해요. 화면을 바로바로 보면서 고치려면:
 
 ```bash
+docker compose stop frontend
 cd frontend
 npm install
 echo "NEXT_PUBLIC_API_MODE=http" > .env.local
 echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000" >> .env.local
 npm run dev
 ```
-
-→ http://localhost:3000
 
 ### 테스트 계정
 

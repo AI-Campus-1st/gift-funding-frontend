@@ -1,4 +1,4 @@
-# 로컬 개발용 — DB(PostgreSQL)와 백엔드(FastAPI)를 컨테이너 2개로 나눠 함께 관리 (TechStack: Docker Compose)
+# 로컬 실행용 — DB(PostgreSQL) · 백엔드(FastAPI) · 프론트(Next.js) 컨테이너 3개를 함께 관리 (TechStack: Docker Compose)
 #
 # 켜기 (처음 · 코드 수정 후):  docker compose up -d --build
 # 끄기 (데이터 유지):          docker compose down
@@ -7,6 +7,8 @@
 #
 # - db: 처음 만들 때만 db/*.sql 이 이름 순서대로 자동 실행된다 (01_init.sql → 02_data.sql)
 # - backend: db 가 준비(healthy)된 뒤에 켜진다. 주소 http://localhost:8000 (API 문서 /docs)
+# - frontend: backend 가 준비된 뒤에 켜진다. 주소 http://localhost:3000 (배포용 빌드 — 코드를 고치면 --build 로 다시 빌드)
+#   화면을 고치면서 바로 보고 싶으면: docker compose stop frontend → frontend 폴더에서 npm run dev
 # - 값은 프로젝트 루트 .env 에서 읽는다 (.env.example 참고)
 services:
   db:
@@ -58,6 +60,26 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # 화면 코드는 사용자의 브라우저에서 실행되므로, 브라우저가 접속할 백엔드 주소를 넣는다 (컨테이너 이름 backend 아님)
+        NEXT_PUBLIC_API_MODE: http
+        NEXT_PUBLIC_API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://localhost:8000}
+    container_name: gift-funding-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/login"]
+      interval: 10s
+      timeout: 5s
       retries: 5
 
 volumes:
