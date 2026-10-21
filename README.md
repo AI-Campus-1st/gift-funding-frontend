@@ -14,7 +14,7 @@
 
 | 구분 | 주소 |
 |---|---|
-| 화면 | Vercel 배포 후 추가 예정 |
+| 화면 | https://gift-funding-frontend-tau.vercel.app |
 | 백엔드 API | https://minji-gift-funding.onrender.com (`/docs`) |
 
 - 백엔드는 무료 서버라 15분 동안 요청이 없으면 잠들어요. 처음 열 때 30초 ~ 1분 걸릴 수 있어요.
