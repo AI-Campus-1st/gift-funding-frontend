@@ -109,3 +109,43 @@ def test_unknown_api_returns_error_format(client):
     res = client.get(f"{API}/nothing-here")
     assert res.status_code == 404
     assert res.json()["code"] == "NOT_FOUND"
+
+
+# ───────── A8 비밀번호 변경 (docs/features/password-change.md) ─────────
+
+
+def change(client, headers, current="password123", new="newpass1234", confirm=None):
+    body = {"current_password": current, "new_password": new, "new_password_confirm": new if confirm is None else confirm}
+    return client.patch(f"{API}/me/password", headers=headers, json=body)
+
+
+def test_change_password_then_login_with_new_only(client):
+    token = login(client)["access_token"]
+    assert change(client, auth_header(token)).status_code == 204
+    # 로그인 유지: 지금 토큰으로 계속 쓸 수 있다
+    assert client.get(f"{API}/me", headers=auth_header(token)).status_code == 200
+    # 새 비밀번호로만 로그인된다
+    assert login(client, password="newpass1234")["user"]["email"] == "seoyeon@example.com"
+    old = client.post(f"{API}/auth/login", json={"email": "seoyeon@example.com", "password": "password123", "remember_me": False})
+    assert old.status_code == 401
+
+
+def test_change_password_rejects_wrong_current_and_same_password(client):
+    headers = auth_header(login(client)["access_token"])
+    wrong = change(client, headers, current="wrong-pass")
+    assert wrong.status_code == 400 and wrong.json()["field_errors"] == {"current_password": "현재 비밀번호가 일치하지 않습니다."}
+    same = change(client, headers, new="password123")
+    assert same.status_code == 400 and same.json()["field_errors"] == {"new_password": "현재 비밀번호와 다른 비밀번호를 입력해 주세요."}
+
+
+def test_change_password_validation_messages(client):
+    headers = auth_header(login(client)["access_token"])
+    empty = client.patch(f"{API}/me/password", headers=headers, json={"current_password": "", "new_password": "", "new_password_confirm": ""})
+    assert empty.status_code == 400 and empty.json()["field_errors"] == {
+        "current_password": "현재 비밀번호를 입력해 주세요.",
+        "new_password": "비밀번호를 입력해 주세요.",
+        "new_password_confirm": "비밀번호를 다시 입력해 주세요.",
+    }
+    short = change(client, headers, new="short", confirm="different")
+    assert short.json()["field_errors"] == {"new_password": "비밀번호는 8자 이상 입력해 주세요.", "new_password_confirm": "비밀번호가 일치하지 않습니다."}
+    assert client.patch(f"{API}/me/password", json={}).status_code == 401

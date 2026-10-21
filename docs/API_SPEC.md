@@ -160,7 +160,7 @@ AiRecommendationDto { id, name, reason, category, price_min, price_max }
 
 "프론트 함수"는 `frontend/src/lib/api/*.ts`의 함수 이름이다. 함수 이름 · 입력 · 반환 타입은 그대로 두고 내부만 이 API를 호출하도록 바꾼다.
 
-### 3.1 인증 · 사용자 관리 (F-01, F-02) — 7개
+### 3.1 인증 · 사용자 관리 (F-01, F-02) — 8개
 
 | # | 메서드 · 경로 | 프론트 함수 | 인증 · 권한 | 요청 | 응답 | 주요 오류 |
 |---|---|---|---|---|---|---|
@@ -171,6 +171,7 @@ AiRecommendationDto { id, name, reason, category, price_min, price_max }
 | A5 | `PATCH /me` | `updateProfile` | 본인 | `{ name, birthday, profile_image_url }` | `200 UserDto` | VALIDATION |
 | A6 | `GET /me/preferences` | `getPreference` | 본인 | — | `200 PreferenceDto` | — |
 | A7 | `PUT /me/preferences` | `updatePreference` | 본인 | `PreferenceDto` | `200 PreferenceDto` | VALIDATION (키워드 10개 초과, 없는 카테고리) |
+| A8 | `PATCH /me/password` | `changePassword` | 본인 | `{ current_password, new_password, new_password_confirm }` | `204` | VALIDATION (현재 비밀번호 틀림 · 현재와 같음 포함), UNAUTHORIZED |
 
 - A1: 서버가 모든 값을 다시 검증한다. 이메일은 소문자로 저장, 비밀번호는 Argon2 해시. `password_confirm`은 저장하지 않는다.
 - A2: 토큰 유효기간은 항상 30일이다 (Q16, 2026-10-19 확정). `remember_me`는 프론트 보관 위치만 정한다: true면 localStorage(브라우저를 닫아도 유지), false면 sessionStorage(브라우저를 닫으면 로그아웃).

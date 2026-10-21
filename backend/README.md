@@ -101,7 +101,9 @@ uvicorn app.main:app --reload --reload-dir app
 
 ## 프론트를 실제 백엔드에 연결
 
-`frontend/.env.local` 파일을 만들고 두 줄을 넣은 뒤 `npm run dev` 를 다시 실행한다.
+`docker compose up -d --build` 로 켜면 프론트(http://localhost:3000)도 컨테이너로 함께 켜지고, 이미 실제 백엔드에 연결되어 있다 (frontend/Dockerfile · docker-compose.yml 의 frontend).
+
+화면을 고치면서 `npm run dev` 로 개발할 때는 `docker compose stop frontend` 로 3000번을 비운 뒤, `frontend/.env.local` 파일을 만들고 두 줄을 넣어 실행한다.
 
 ```
 NEXT_PUBLIC_API_MODE=http

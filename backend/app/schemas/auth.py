@@ -40,6 +40,14 @@ class PreferenceRequest(BaseModel):
     price_range: str | None = None
 
 
+class PasswordChangeRequest(BaseModel):
+    """A8 비밀번호 변경 (docs/features/password-change.md)"""
+
+    current_password: str = ""
+    new_password: str = ""
+    new_password_confirm: str = ""
+
+
 # ───────── 응답 ─────────
 
 
