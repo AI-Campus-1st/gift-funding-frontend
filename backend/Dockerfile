@@ -19,4 +19,5 @@ COPY pytest.ini .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 포트: 로컬 도커는 8000, Render 같은 클라우드는 PORT 환경변수로 정해 준 번호를 쓴다
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
