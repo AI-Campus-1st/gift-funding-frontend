@@ -81,6 +81,32 @@ function updateProfile(ctx: MockContext) {
   return toUser(db, user.id);
 }
 
+/** A8 비밀번호 변경: 현재 비밀번호 확인 → 현재와 같은 비밀번호 거절 → 저장 (로그인 유지) */
+function changePassword(ctx: MockContext) {
+  const input = bodyOf<{ currentPassword: string; newPassword: string; newPasswordConfirm: string }>(ctx);
+  const db = getDb();
+  const user = findUser(db, requireUser(ctx));
+  const values = { currentPassword: input.currentPassword ?? "", newPassword: input.newPassword ?? "", newPasswordConfirm: input.newPasswordConfirm ?? "" };
+  // 백엔드와 같은 순서: 입력 검사 → 현재 비밀번호 확인 → 현재와 같은 비밀번호 거절 (같은지는 저장된 해시로 확인)
+  const fieldErrors: Record<string, string> = {};
+  if (values.currentPassword.length === 0) fieldErrors.currentPassword = "현재 비밀번호를 입력해 주세요.";
+  const newError = validatePassword(values.newPassword);
+  if (newError) fieldErrors.newPassword = newError;
+  const confirmError = validatePasswordConfirm(values.newPassword, values.newPasswordConfirm);
+  if (confirmError) fieldErrors.newPasswordConfirm = confirmError;
+  if (Object.keys(fieldErrors).length > 0) throw new ApiError("VALIDATION", "입력값을 확인해 주세요.", { fieldErrors });
+  if (user.passwordHash !== mockHash(values.currentPassword)) {
+    throw new ApiError("VALIDATION", "현재 비밀번호가 일치하지 않습니다.", { fieldErrors: { currentPassword: "현재 비밀번호가 일치하지 않습니다." } });
+  }
+  if (user.passwordHash === mockHash(values.newPassword)) {
+    const message = "현재 비밀번호와 다른 비밀번호를 입력해 주세요.";
+    throw new ApiError("VALIDATION", message, { fieldErrors: { newPassword: message } });
+  }
+  user.passwordHash = mockHash(values.newPassword);
+  saveDb();
+  return undefined;
+}
+
 /** A7 취향 저장: 키워드는 공백 제거 · 중복 제거 · 최대 10개 */
 function updatePreference(ctx: MockContext) {
   const input = bodyOf<GiftPreference>(ctx);
@@ -101,6 +127,7 @@ export const authRoutes = [
   route("POST", "/auth/logout", () => undefined, { delay: 100 }),
   route("GET", "/me", (ctx) => toUser(getDb(), requireUser(ctx)), { delay: 100 }),
   route("PATCH", "/me", updateProfile),
+  route("PATCH", "/me/password", changePassword, { delay: 400 }),
   route("GET", "/me/preferences", (ctx) => findUser(getDb(), requireUser(ctx)).preference),
   route("PUT", "/me/preferences", updatePreference),
 ];

@@ -15,7 +15,7 @@ export const TABS = [
   { href: "/my-funding", label: "내 펀딩", icon: Gift, match: ["/my-funding", "/create-funding", "/add-gift", "/ai-recommend"] },
   { href: "/group", label: "그룹", icon: Users, match: ["/group", "/create-group"] },
   { href: "/friend-funding", label: "친구 펀딩", icon: HeartHandshake, match: ["/friend-funding", "/join-invite", "/donation", "/my-donations"] },
-  { href: "/mypage", label: "마이페이지", icon: User, match: ["/mypage", "/edit-profile", "/gift-preferences", "/message-inbox"] },
+  { href: "/mypage", label: "마이페이지", icon: User, match: ["/mypage", "/edit-profile", "/change-password", "/gift-preferences", "/message-inbox"] },
 ];
 
 export function BottomTabBar() {

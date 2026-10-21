@@ -7,7 +7,7 @@
  */
 import Link from "next/link";
 import { useState } from "react";
-import { CalendarHeart, ChevronRight, Heart, LogOut, Mail, UserPen } from "lucide-react";
+import { CalendarHeart, ChevronRight, Heart, KeyRound, LogOut, Mail, UserPen } from "lucide-react";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { RetroWindow } from "@/components/layout/RetroWindow";
 import { Screen } from "@/components/layout/Screen";
@@ -18,6 +18,7 @@ import { withFreshState } from "@/lib/withFreshState";
 
 const MENU = [
   { href: "/edit-profile", label: "프로필 수정", icon: UserPen },
+  { href: "/change-password", label: "비밀번호 변경", icon: KeyRound },
   { href: "/gift-preferences", label: "선물 취향 설정", icon: Heart },
   { href: "/message-inbox", label: "축하 편지함", icon: Mail },
   { href: "/birthday-calendar", label: "생일 캘린더", icon: CalendarHeart },

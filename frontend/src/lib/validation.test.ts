@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAmountInput, validateBirthday, validateEmail, validateFundingInput, validateGiftInput, validateName, validatePassword, validatePasswordConfirm, validateUrl } from "./validation";
+import { parseAmountInput, validateBirthday, validateEmail, validateFundingInput, validateGiftInput, validateName, validatePassword, validatePasswordChange, validatePasswordConfirm, validateUrl } from "./validation";
 
 describe("회원가입 입력값 검증 (01_auth.md 5.2 문구)", () => {
   it("이름", () => {
@@ -53,5 +53,23 @@ describe("글자 수 제한 (2026-10-19 확정, Q1)", () => {
     const today = new Date().toISOString().slice(0, 10);
     const errors = validateFundingInput({ name: "가".repeat(41), groupId: "g", startDate: today, endDate: today, giftCount: 1 });
     expect(errors.name).toBe("펀딩 이름은 40자 이내로 입력해 주세요.");
+  });
+});
+
+describe("비밀번호 변경 입력 검사 (docs/features/password-change.md)", () => {
+  it("빈 칸 · 8자 미만 · 확인 불일치 · 현재와 같음", () => {
+    expect(validatePasswordChange({ currentPassword: "", newPassword: "", newPasswordConfirm: "" })).toEqual({
+      currentPassword: "현재 비밀번호를 입력해 주세요.",
+      newPassword: "비밀번호를 입력해 주세요.",
+      newPasswordConfirm: "비밀번호를 다시 입력해 주세요.",
+    });
+    expect(validatePasswordChange({ currentPassword: "password123", newPassword: "short", newPasswordConfirm: "x" })).toEqual({
+      newPassword: "비밀번호는 8자 이상 입력해 주세요.",
+      newPasswordConfirm: "비밀번호가 일치하지 않습니다.",
+    });
+    expect(validatePasswordChange({ currentPassword: "password123", newPassword: "password123", newPasswordConfirm: "password123" })).toEqual({
+      newPassword: "현재 비밀번호와 다른 비밀번호를 입력해 주세요.",
+    });
+    expect(validatePasswordChange({ currentPassword: "password123", newPassword: "newpass1234", newPasswordConfirm: "newpass1234" })).toEqual({});
   });
 });

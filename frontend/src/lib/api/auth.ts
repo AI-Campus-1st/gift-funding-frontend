@@ -39,6 +39,11 @@ export async function updateProfile(input: ProfileInput): Promise<User> {
   return toUser(await http.patch<UserDto>("/me", toProfileRequest(input)));
 }
 
+/** A8 비밀번호 변경 — 현재 비밀번호 확인 후 변경, 로그인은 유지된다 (docs/features/password-change.md) */
+export async function changePassword(input: { currentPassword: string; newPassword: string; newPasswordConfirm: string }): Promise<void> {
+  await http.patch<void>("/me/password", toDto(input));
+}
+
 /** A6 선물 취향 조회 */
 export async function getPreference(): Promise<GiftPreference> {
   return fromDto<GiftPreference>(await http.get<PreferenceDto>("/me/preferences"));

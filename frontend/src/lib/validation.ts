@@ -39,6 +39,21 @@ export function validatePasswordConfirm(password: string, confirm: string): stri
   return null;
 }
 
+/**
+ * 비밀번호 변경 입력 검사 (docs/features/password-change.md)
+ * 현재 비밀번호가 맞는지 · 현재와 같은지는 서버가 확인한다 (화면은 원문을 모르기 때문)
+ */
+export function validatePasswordChange(input: { currentPassword: string; newPassword: string; newPasswordConfirm: string }): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (input.currentPassword.length === 0) errors.currentPassword = "현재 비밀번호를 입력해 주세요.";
+  const newError = validatePassword(input.newPassword);
+  if (newError) errors.newPassword = newError;
+  else if (input.newPassword === input.currentPassword) errors.newPassword = "현재 비밀번호와 다른 비밀번호를 입력해 주세요.";
+  const confirmError = validatePasswordConfirm(input.newPassword, input.newPasswordConfirm);
+  if (confirmError) errors.newPasswordConfirm = confirmError;
+  return errors;
+}
+
 /** 생년월일: 필수 / 존재하는 날짜 / 미래 날짜 불가 */
 export function validateBirthday(value: string): string | null {
   if (!value) return "생년월일을 선택해 주세요.";
