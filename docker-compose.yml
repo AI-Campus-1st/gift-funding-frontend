@@ -1,0 +1,64 @@
+# 로컬 개발용 — DB(PostgreSQL)와 백엔드(FastAPI)를 컨테이너 2개로 나눠 함께 관리 (TechStack: Docker Compose)
+#
+# 켜기 (처음 · 코드 수정 후):  docker compose up -d --build
+# 끄기 (데이터 유지):          docker compose down
+# 코드 수정 반영:              docker compose down && docker compose up -d --build
+# DB를 처음부터 다시 (⚠️ 데이터 삭제): docker compose down -v && docker compose up -d --build
+#
+# - db: 처음 만들 때만 db/*.sql 이 이름 순서대로 자동 실행된다 (01_init.sql → 02_data.sql)
+# - backend: db 가 준비(healthy)된 뒤에 켜진다. 주소 http://localhost:8000 (API 문서 /docs)
+# - 값은 프로젝트 루트 .env 에서 읽는다 (.env.example 참고)
+services:
+  db:
+    image: postgres:16
+    container_name: gift-funding-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Seoul
+      PGTZ: Asia/Seoul
+    command: ["postgres", "-c", "timezone=Asia/Seoul"]
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./db/02_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: gift-funding-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # 컨테이너끼리는 서비스 이름(db)으로 접속한다 (localhost 아님)
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 를 .env 에 넣어 주세요}
+      # 정산 계좌번호 암호화 열쇠 (바꾸면 이미 저장된 계좌번호를 읽을 수 없다)
+      ACCOUNT_ENCRYPTION_KEY: ${ACCOUNT_ENCRYPTION_KEY:?ACCOUNT_ENCRYPTION_KEY 를 .env 에 넣어 주세요}
+      # AI 선물 추천: OPENAI_API_KEY(GPT) → GEMINI_API_KEY → 둘 다 비어 있으면 모의 추천
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      TZ: Asia/Seoul
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  db-data:

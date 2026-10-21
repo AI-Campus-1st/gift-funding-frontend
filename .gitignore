@@ -1,0 +1,24 @@
+# 비밀값 (절대 올리지 않기 — .env.example 만 올린다)
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Python (backend)
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Node · Next.js (frontend)
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# 에디터
+.vscode/
+.idea/

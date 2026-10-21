@@ -1,0 +1,193 @@
+/*
+ * 전역 스타일 & 디자인 토큰
+ * - 값의 출처: docs/design/components/base.md (2~5장, 10.2 CSS 예시)
+ * - :root 의 CSS 변수(design token)를 정의하고, @theme 으로 Tailwind 유틸리티 클래스와 연결한다.
+ *   예) --color-primary → bg-primary / text-primary / border-primary
+ * - 토큰 이름 대응표 (base.md → Tailwind 클래스)
+ *   colors.border        → border-line        (레트로 창 테두리)
+ *   colors.border-strong → border-line-strong (포커스·강조 테두리)
+ *   colors.accent-blue   → bg-sky             (창 제목 표시줄)
+ *   colors.accent-yellow → bg-memo            (메모지 안내 영역)
+ */
+@import "tailwindcss";
+
+@theme {
+  /* 2.1 브랜드 및 강조 색상 */
+  --color-primary: #ef78bd;
+  --color-primary-hover: #e461ad;
+  --color-primary-active: #cc4b97;
+  --color-primary-disabled: #f6cde6;
+  --color-on-primary: #25172a;
+  --color-lavender: #c8a9ef;
+  --color-sky: #b9d7f5;
+  --color-memo: #fff1b8;
+
+  /* 2.2 배경 색상 */
+  --color-canvas: #fffdfd;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fff1f9;
+  --color-surface-strong: #f3e7f5;
+  --color-desktop: #f8f1fa;
+  --color-holo-start: #f7c4e8;
+  --color-holo-mid: #c8ddf7;
+  --color-holo-end: #dcc5f3;
+
+  /* 2.3 테두리와 텍스트 */
+  --color-line: #77718a;
+  --color-line-strong: #30283c;
+  --color-hairline: #e8ddeb;
+  --color-ink: #282235;
+  --color-body: #40374c;
+  --color-muted: #6d6579;
+  --color-muted-soft: #827a8c;
+
+  /* 2.4 상태 색상 */
+  --color-success: #277c62;
+  --color-warning: #a05c11;
+  --color-error: #b32638;
+  --color-info: #315c9d;
+  --color-scrim: rgb(23 18 31 / 0.55);
+
+  /* 3. 타이포그래피 (크기 / 줄 높이 / 굵기) */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --text-display-xl: 28px;
+  --text-display-xl--line-height: 1.25;
+  --text-display-xl--font-weight: 800;
+  --text-display-lg: 24px;
+  --text-display-lg--line-height: 1.3;
+  --text-display-lg--font-weight: 700;
+  --text-display-md: 20px;
+  --text-display-md--line-height: 1.35;
+  --text-display-md--font-weight: 700;
+  --text-title-md: 17px;
+  --text-title-md--line-height: 1.4;
+  --text-title-md--font-weight: 700;
+  --text-title-sm: 15px;
+  --text-title-sm--line-height: 1.4;
+  --text-title-sm--font-weight: 600;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.5;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.5;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.45;
+  --text-caption--font-weight: 500;
+  --text-badge: 12px;
+  --text-badge--line-height: 1.3;
+  --text-badge--font-weight: 700;
+  --text-button: 15px;
+  --text-button--line-height: 1.3;
+  --text-button--font-weight: 700;
+
+  /* 5.1 레트로 창 그림자 */
+  --shadow-window: 3px 3px 0 #77718a;
+  --shadow-window-hover: 4px 4px 0 #30283c;
+  --shadow-button: 2px 2px 0 #30283c;
+
+  /* 5.2 모서리 */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* 애니메이션은 100~180ms 로 짧게 (8.1) */
+  --default-transition-duration: 150ms;
+}
+
+:root {
+  /* 레이아웃 치수 (4.2, 6.1) */
+  --app-max-width: 430px;
+  --app-header-height: 56px;
+  --bottom-tab-height: 72px;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-desktop);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 키보드 포커스를 명확하게 표시 (8.1 접근성) */
+:focus-visible {
+  outline: 3px solid var(--color-info);
+  outline-offset: 2px;
+}
+
+/* 600px 미만: 앱이 전체 너비를 사용하므로 바깥 배경도 앱 배경과 동일하게 (8장) */
+@media (max-width: 599px) {
+  body {
+    background: var(--color-canvas);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 장식용 홀로그램 그라데이션 (장식에만 사용, 금액·오류·정산 영역 뒤에는 쓰지 않는다) */
+@utility bg-holo {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-holo-start),
+    var(--color-holo-mid),
+    var(--color-holo-end)
+  );
+}
+
+/* FullCalendar(생일 캘린더) 테마 보정 */
+.birthday-calendar .fc {
+  --fc-border-color: var(--color-hairline);
+  --fc-today-bg-color: var(--color-surface-soft);
+  --fc-event-bg-color: var(--color-primary);
+  --fc-event-border-color: var(--color-line-strong);
+  --fc-event-text-color: var(--color-on-primary);
+  font-size: 13px;
+}
+.birthday-calendar .fc .fc-daygrid-day-number {
+  color: var(--color-body);
+  padding: 2px 4px;
+}
+.birthday-calendar .fc .fc-col-header-cell-cushion {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+.birthday-calendar .fc .fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.birthday-calendar .fc .fc-button {
+  min-height: 40px;
+  min-width: 40px;
+  border: 2px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-button);
+  font-weight: 700;
+}
+.birthday-calendar .fc .fc-button:hover {
+  background: var(--color-surface-soft);
+}
+.birthday-calendar .fc .fc-button:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+.birthday-calendar .fc .fc-toolbar-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
